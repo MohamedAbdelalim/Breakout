@@ -69,9 +69,9 @@ function draw(){
       drawPaddle(); 
       drawLives();
 
-      // ارتداد الكرة من الحواف
+      // ball reverce on padding 
       if(x+dx>canvas.width-ballRadius||x+dx<ballRadius) dx=-dx;
-      if(y+dy<ballRadius) dy=-dy;
+      if(y+dy<ballRadius) dy=-dy;  // upper canves
       else if(y+dy>canvas.height-ballRadius){
         if(x>paddleX&&x<paddleX+paddleWidth){
           dy=-dy;
