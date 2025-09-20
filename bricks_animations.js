@@ -4,7 +4,7 @@ const PARTICLE_COUNT = 8;
 const PARTICLE_LIFETIME = 60;
 let particles = [];
 
-// ✨ FIX: Added brickWidth and brickHeight as parameters
+
 export function createParticles(brickX, brickY, brickWidth, brickHeight, brickColor) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({

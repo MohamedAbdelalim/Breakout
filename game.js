@@ -25,7 +25,7 @@ function init() {
     ball.y = canvas.height - 50;
     paddle.x = (canvas.width - paddle.width) / 2;
     
-    // ✨ FIX: Pass the canvas to generateBricks
+
     generateBricks(canvas); 
     draw(); 
 }
@@ -49,7 +49,7 @@ function draw() {
         hitSound.play();
     }
     
-    // ✨ FIX: Pass ball, paddle, and canvas to the level handler
+
     handleLevelCompletion(ball, paddle, canvas);
 
     // Paddle movement

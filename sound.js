@@ -15,4 +15,4 @@ paddleSound.volume = 0.05;
 export function backgroundsound() {
   backgroundSound.play();
 }
-// This function will be called on the first user interaction
+
