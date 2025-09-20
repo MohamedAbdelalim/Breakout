@@ -1,12 +1,15 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+                                                   //LocalStorage & Score counting.
 
-let score = 0;
-let highScore = localStorage.getItem("highScore")
+
+export const canvas = document.getElementById("canvas");
+export const ctx = canvas.getContext("2d");
+
+export let score = 400;
+export let highScore = localStorage.getItem("highScore")
               ? parseInt(localStorage.getItem("highScore"))                // instead of ifelse  "?" if this true ":" else 
               : 0;
 
-function increaseScore() {
+ export function increaseScore() {
     score += 10;
     if (score > highScore) {
         highScore = score;
@@ -14,7 +17,7 @@ function increaseScore() {
     }
 }
 
-function drawScore() {
+export function drawScore() {
     ctx.font = "24px Helvetica";
     ctx.fillStyle = "white";
     ctx.textAlign = "left";
@@ -23,10 +26,10 @@ function drawScore() {
     ctx.fillText("High Score: " + highScore, 20, 60);
 }
 
-function drawTopLine() {
+export function drawTopLine() {
     ctx.beginPath();
-    ctx.moveTo(0, 80); // line starts at left edge (x=0, y=80)
-    ctx.lineTo(canvas.width, 80);  // line goes all the way to the right
+    ctx.moveTo(0, canvas.height *.12); // line starts at left edge (x=0, y=80)
+    ctx.lineTo(canvas.width, canvas.height *.12);  // line goes all the way to the right
     ctx.strokeStyle = "white";   // line color
     ctx.lineWidth = 6;               // thickness
     ctx.stroke();
@@ -36,14 +39,15 @@ function drawTopLine() {
 // Demo: increase score every 2 seconds
 // setInterval(increaseScore, 2000);
 
-function gameLoop() {
+export function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawScore();               // show score + highscore at top left
                                
     drawTopLine();                // draw separating line
-
+    // increaseScore()
     requestAnimationFrame(gameLoop);
+
 }
 
 gameLoop();
