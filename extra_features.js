@@ -1,53 +1,41 @@
-                                                   //LocalStorage & Score counting.
+// This variable holds the high score for the current session.
+// It loads from localStorage once when the game starts.
+let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
 
-
-export const canvas = document.getElementById("canvas");
-export const ctx = canvas.getContext("2d");
-
-export let score = 400;
-export let highScore = localStorage.getItem("highScore")
-              ? parseInt(localStorage.getItem("highScore"))                // instead of ifelse  "?" if this true ":" else 
-              : 0;
-
- export function increaseScore() {
-    score += 10;
-    if (score > highScore) {
-        highScore = score;
+/**
+ * Checks if the current score is a new high score and saves it if it is.
+ * This function must be called every time the score changes.
+ * @param {number} currentScore The player's current score from the game.
+ */
+export function checkAndUpdateHighScore(currentScore) {
+    if (currentScore > highScore) {
+        highScore = currentScore;
         localStorage.setItem("highScore", highScore);
     }
 }
 
-export function drawScore() {
-    ctx.font = "24px Helvetica";
-    ctx.fillStyle = "white";
+/**
+ * Draws the current score and the high score on the canvas.
+ * @param {CanvasRenderingContext2D} ctx The canvas context.
+ * @param {number} score The player's current score.
+ */
+export function drawScore(ctx, score) {
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#ffffffff";
     ctx.textAlign = "left";
 
     ctx.fillText("Score: " + score, 20, 30);
-    ctx.fillText("High Score: " + highScore, 20, 60);
-}
-
-export function drawTopLine() {
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height *.12); // line starts at left edge (x=0, y=80)
-    ctx.lineTo(canvas.width, canvas.height *.12);  // line goes all the way to the right
-    ctx.strokeStyle = "white";   // line color
-    ctx.lineWidth = 6;               // thickness
-    ctx.stroke();
-    ctx.closePath();
-}
-
-// Demo: increase score every 2 seconds
-// setInterval(increaseScore, 2000);
-
-export function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawScore();               // show score + highscore at top left
-                               
-    drawTopLine();                // draw separating line
-    // increaseScore()
-    requestAnimationFrame(gameLoop);
+    ctx.fillText("Highest Score: " + highScore, 20, 60);
 
 }
 
-gameLoop();
+/**
+ * Draws the remaining lives on the canvas.
+ * @param {CanvasRenderingContext2D} ctx The canvas context.
+ * @param {number} lives The player's remaining lives.
+ */
+export function drawLives(ctx, lives) {
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#dd8500ff";
+    ctx.fillText("Lives: " + lives, ctx.canvas.width - 100, 30);
+}
