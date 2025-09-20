@@ -1,31 +1,53 @@
                                                    //LocalStorage & Score counting.
 
 
-var currentScore = 0;  //score 0 at the begg.
-var highscore = 0; 
-   
+export const canvas = document.getElementById("canvas");
+export const ctx = canvas.getContext("2d");
 
+export let score = 400;
+export let highScore = localStorage.getItem("highScore")
+              ? parseInt(localStorage.getItem("highScore"))                // instead of ifelse  "?" if this true ":" else 
+              : 0;
 
-
-function  ballcollision () {                                         // collision detection function.
-
-
-    
+ export function increaseScore() {
+    score += 10;
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("highScore", highScore);
+    }
 }
 
-function scoreDrawing () {                                           // drawing score function.
-ctx.font = "25px , helvetica"                                       //Score font
-ctx.fillStyle = "#000"                                           // score will be shown in black.
-ctx.fillText = ("score : "+currentScore, 400 , 20)                          // x,y represent the place of the "Score" text 20px down and 20px up.
-ctx.fillText("High Score: " + highScore, 400, 40);
+export function drawScore() {
+    ctx.font = "24px Helvetica";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "left";
+
+    ctx.fillText("Score: " + score, 20, 30);
+    ctx.fillText("High Score: " + highScore, 20, 60);
 }
 
+export function drawTopLine() {
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height *.12); // line starts at left edge (x=0, y=80)
+    ctx.lineTo(canvas.width, canvas.height *.12);  // line goes all the way to the right
+    ctx.strokeStyle = "white";   // line color
+    ctx.lineWidth = 6;               // thickness
+    ctx.stroke();
+    ctx.closePath();
+}
 
-function draw (){                                                   //calling the score function.
+// Demo: increase score every 2 seconds
+// setInterval(increaseScore, 2000);
+
+export function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawScore();               // show score + highscore at top left
+                               
+    drawTopLine();                // draw separating line
+    // increaseScore()
+    requestAnimationFrame(gameLoop);
 
 }
 
-
-// if (localStorage.getItem("highScore")) {
-//   highScore = parseInt(localStorage.getItem("highScore"));
-// }
+gameLoop();
