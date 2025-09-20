@@ -9,16 +9,21 @@ let rightPressed=false, leftPressed=false;
 
 
 // voice 
-let hitSound = new Audio("12.mp3");       // voice for crush bricks
-let paddleSound = new Audio("paddle.mp3"); //sound for cruch paddle
-let bgMusic = new Audio("backg.mp3");         // background music
+export let hitSound = new Audio("12.mp3");       // voice for crush bricks
+export let paddleSound = new Audio("paddle.mp3"); //sound for cruch paddle
+export let bgMusic = new Audio("backg.mp3");         // background music
 bgMusic.loop = true;   // for make it alwas working
 bgMusic.volume = 0.5;  // sound volum
 
 // this for make back ground sound work when user start to push any button 
-document.addEventListener("keydown", () => {
+
+export function backgroundsound() {
   bgMusic.play();
-}, { once: true }); // to make it done for just one time 
+}
+
+// document.addEventListener("keydown", () => {
+//   bgMusic.play();
+// }, { once: true }); // to make it done for just one time 
 
 
 
@@ -47,7 +52,7 @@ document.addEventListener("mousemove", e => {
 
 // paddel shape
 
-function drawPaddle(){
+export function drawPaddle(){
   ctx.fillStyle="blue";
   ctx.fillRect(paddleX,paddleY,paddleWidth,paddleHeight);
 }
@@ -70,7 +75,7 @@ function drawPaddle(){
     }
 
     // draw lives 
-    function drawLives(){
+   export function drawLives(){
       ctx.font="16px Arial";
       ctx.fillStyle="white";
       ctx.fillText("Lives: "+lives, canvas.width-100, 20);
@@ -142,7 +147,7 @@ function draw(){
 
       collisionDetection();
 
-
+      backgroundsound();
 
 
       // ball reverce on padding 
