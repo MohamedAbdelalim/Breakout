@@ -1,13 +1,14 @@
 body{
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: #EEE;
+    text-align: center;
 }
-  
-  
-  canvas { 
-    background: black;
-     display:block;
-      /* margin:auto;  */
-    border: 1px solid red;
+
+canvas{
+    background-color: rgb(255, 255, 255);
+    border-top:  5px solid skyblue;
+    border-left:  5px solid skyblue;
+    border-right:  5px solid skyblue;
+    /* Added for text rendering */
+    font-family: Arial, sans-serif;
+    font-weight: bold;
 }
