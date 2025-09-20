@@ -6,7 +6,7 @@ body{
   
   
   canvas { 
-    background: #000;
+    background: black;
      display:block;
       /* margin:auto;  */
     border: 1px solid red;
