@@ -1,17 +1,13 @@
 body{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-  
-  
-  canvas { 
-    background: black;
-     display:block;
-      margin:auto; 
-    border: 10px solid red;
+    background-color: #EEE;
+    text-align: center;
 }
 
-.score {
-  font-family: helvetica;
+canvas{
+    background-color: rgb(50, 55, 63);
+    border:  15px solid skyblue;
+
+    /* Added for text rendering */
+    font-family: Arial, sans-serif;
+    font-weight: bold;
 }
