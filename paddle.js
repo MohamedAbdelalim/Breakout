@@ -19,6 +19,8 @@ export function drawPaddle(ctx) {
     ctx.closePath();
 
     // Reset shadow properties
+    
+    // to make other element not effictive by it  
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 }
