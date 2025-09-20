@@ -52,42 +52,6 @@ export function drawBricks() {
 }
 
 
-// -------------------- SCORE & UI --------------------
-export let score = 0;
-
-export let topBox = {
-    x: 10,
-    y: 10,
-    width: canvasWidth - 20,
-    height: 80
-};
-
-export function drawTopBox() {
-  ctx.strokeStyle = "white";  
-  ctx.lineWidth = 3;        
-  ctx.strokeRect(topBox.x, topBox.y, topBox.width, topBox.height); 
-};
-
-export let scoreBox = {
-    x: topBox.width * .75,
-    y: topBox.y * 1.4,
-    width: canvasWidth * .25,
-    height: topBox.height - 8
-}
-
-export function drawScoreBox(score) {
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(scoreBox.x, scoreBox.y, scoreBox.width, scoreBox.height);
-
-    ctx.fillStyle = "white"
-    ctx.font = "30px Arial"
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle"; 
-    ctx.fillText(`Score: ${score}`, scoreBox.x + scoreBox.width / 2, scoreBox.y + scoreBox.height / 2);
-};
-
-
 // -------------------- GAME FLOW --------------------
 export let level = 1;
 
@@ -126,5 +90,4 @@ export function handleLevelCompletion(){
        startNextLevel()
     }
 }
-
 
