@@ -1,5 +1,3 @@
-
-
 //Creates explosion particles when a brick is destroyed.
 
 const PARTICLE_COUNT = 8;

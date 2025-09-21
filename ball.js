@@ -6,6 +6,7 @@ export let ball = {
     dy: -5
 };
 
+// draw the ball
 export function drawBall(ctx) {
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);

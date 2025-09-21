@@ -3,8 +3,8 @@ import {ball} from "./ball.js";
 //  Handle Bricks and multi-levels
 
 let level = 1;
-let brickRowCount = 5;
-let brickColCount = 10;
+let brickRowCount = 4;
+let brickColCount = 5;
 let speed =5;
 
 export let bricks = []; // The main array holding the brick objects
@@ -78,7 +78,7 @@ function startNextLevel(canvas) {
     level++;
     
     // Increase difficulty by adding rows or columns
-    if (level <= 4) {
+    if (level <= 2) {
         brickRowCount++;
 
     } else {
