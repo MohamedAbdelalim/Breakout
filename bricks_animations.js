@@ -1,4 +1,6 @@
-// bricks_animations.js (Corrected)
+
+
+//Creates explosion particles when a brick is destroyed.
 
 const PARTICLE_COUNT = 8;
 const PARTICLE_LIFETIME = 60;
@@ -7,8 +9,8 @@ let particles = [];
 
 export function createParticles(brickX, brickY, brickWidth, brickHeight, brickColor) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
+
         particles.push({
-            // ✨ FIX: Use the new parameters instead of brickInfo
             x: brickX + brickWidth / 2, 
             y: brickY + brickHeight / 2,
             size: Math.random() * 8 + 3,
@@ -21,7 +23,10 @@ export function createParticles(brickX, brickY, brickWidth, brickHeight, brickCo
     }
 }
 
-// This function is already correct
+// The drawParticles function is responsible for:
+// - Updating the position of each particle based on its velocity and gravity.
+// - Reducing the lifetime, size, and opacity of the particle over time.
+
 export function drawParticles(ctx) {
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
