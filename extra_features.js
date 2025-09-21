@@ -2,11 +2,9 @@
 // It loads from localStorage once when the game starts.
 let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
 
-/**
- * Checks if the current score is a new high score and saves it if it is.
- * This function must be called every time the score changes.
- * @param {number} currentScore The player's current score from the game.
- */
+
+// Checks if the current score is a new high score and saves it if it is.
+// This function must be called every time the score changes.
 export function checkAndUpdateHighScore(currentScore) {
     if (currentScore > highScore) {
         highScore = currentScore;
@@ -14,11 +12,8 @@ export function checkAndUpdateHighScore(currentScore) {
     }
 }
 
-/**
- * Draws the current score and the high score on the canvas.
- * @param {CanvasRenderingContext2D} ctx The canvas context.
- * @param {number} score The player's current score.
- */
+// Draws the current score and the high score on the canvas.
+
 export function drawScore(ctx, score) {
     ctx.font = "24px Arial";
     ctx.fillStyle = "#ffffffff";
@@ -29,11 +24,8 @@ export function drawScore(ctx, score) {
 
 }
 
-/**
- * Draws the remaining lives on the canvas.
- * @param {CanvasRenderingContext2D} ctx The canvas context.
- * @param {number} lives The player's remaining lives.
- */
+// Draws the remaining lives on the canvas.
+
 export function drawLives(ctx, lives) {
     ctx.font = "24px Arial";
     ctx.fillStyle = "#dd8500ff";

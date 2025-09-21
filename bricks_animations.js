@@ -38,8 +38,11 @@ export function drawParticles(ctx) {
         let currentSize = p.size * opacity;
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentSize / 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${parseInt(p.color.slice(1,3), 16)}, ${parseInt(p.color.slice(3,5), 16)}, ${parseInt(p.color.slice(5,7), 16)}, ${opacity})`;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = opacity;
         ctx.fill();
+        ctx.globalAlpha = 1.0;
+
         ctx.closePath();
         if (p.lifetime <= 0) {
             particles.splice(i, 1);
