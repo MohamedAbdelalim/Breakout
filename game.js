@@ -24,6 +24,37 @@ const infoText = document.getElementById('infoText');
 let gameState = { score: 0, lives: 3 };
 let isSoundOn = false; // sound default 
 
+
+// ====== LEVEL MENU ======
+const levelsMenu = document.getElementById('levelsMenu');
+const levelButtons = document.querySelectorAll('.levelBtn');
+const backBtn = document.getElementById('backBtn');
+let selectedLevel = "easy"; // default level
+
+levelsBtn.addEventListener('click', () => {
+  menu.style.display = 'none';
+  levelsMenu.style.display = 'flex';
+});
+
+backBtn.addEventListener('click', () => {
+  levelsMenu.style.display = 'none';
+  menu.style.display = 'flex';
+});
+
+levelButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedLevel = btn.dataset.level;
+    levelsMenu.style.display = 'none';
+    menu.style.display = 'none';
+    canvas.style.display = 'block';
+    if (isSoundOn) backgroundSound.play();
+    startGame(selectedLevel);
+  });
+});
+
+
+
+
 // back ground sound button
 soundBtn.addEventListener('click', () => {
   if (isSoundOn) {
@@ -83,12 +114,59 @@ startBtn.addEventListener('click', () => {
 
 
 
-function init() {
+function init(level) {
   ball.x = canvas.width / 2;
   ball.y = canvas.height - 50;
   paddle.x = (canvas.width - paddle.width) / 2;
-  generateBricks(canvas);
+
+  switch (level) {
+    case "easy":
+      ball.dx = 4; ball.dy = -4;
+      paddle.width = 200;
+      generateBricks(canvas, 3, 6); // 3 صفوف من الطوب
+      break;
+
+    case "medium":
+      ball.dx = 6; ball.dy = -6;
+      paddle.width = 150;
+      generateBricks(canvas, 4, 8);
+      break;
+
+    case "hard":
+      ball.dx = 8; ball.dy = -8;
+      paddle.width = 120;
+      generateBricks(canvas, 5, 10);
+      break;
+
+    case "infinity":
+      ball.dx = 6; ball.dy = -6;
+      paddle.width = 130;
+      generateBricks(canvas, 4, 8);
+      startInfiniteMode();
+      break;
+  }
 }
+
+function startGame(level = "easy") {
+  init(level);
+  draw();
+}
+
+
+
+function startInfiniteMode() {
+  setInterval(() => {
+    generateBricks(canvas, 1, 8, true); // صف جديد كل 10 ثواني
+  }, 10000);
+}
+
+
+// function init() {
+//   ball.x = canvas.width / 2;
+//   ball.y = canvas.height - 50;
+//   paddle.x = (canvas.width - paddle.width) / 2;
+//   generateBricks(canvas);
+// }
 
 let animationId; // var for save fram number
 
@@ -149,10 +227,10 @@ function draw() {
   animationId = requestAnimationFrame(draw);
 }
 
-function startGame() {
-  init();
-  draw();
-}
+// function startGame() {
+//   init();
+//   draw();
+// }
 
 window.onload = () => {
   canvas.style.display = 'none';
