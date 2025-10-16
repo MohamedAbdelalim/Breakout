@@ -1,26 +1,39 @@
 // Import game elements
 import { ball, drawBall } from "./ball.js";
 import { paddle, drawPaddle } from "./paddle.js";
-import { bricks, generateBricks, drawBricks, handleLevelCompletion } from "./bricks.js";
+import { 
+    bricks, 
+    generateBricks, 
+    drawBricks, 
+    handleLevelCompletion, 
+    spawnPowerUp, 
+    drawPowerUps, 
+    updatePowerUps 
+} from "./bricks.js";
 import { brickCollisionDetection } from "./collision.js";
 import { rightPressed, leftPressed } from "./game_input.js";
 import { drawParticles } from "./bricks_animations.js";
-import { drawScore, drawLives, checkAndUpdateHighScore } from "./extra_features.js";
-import { backgroundsound,hitSound, paddleSound } from "./sound.js";
+import { 
+    updateScoreDisplay, 
+    updateLivesDisplay, 
+    checkAndUpdateHighScore,
+    showGameOverModal
+} from "./extra_features.js";
+import { backgroundsound, hitSound, paddleSound } from "./sound.js";
 
-// CANVAS & CONTEXT SETUP 
+// Canvas and context setup
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// GAME STATE 
+// Game state
 let gameState = {
     score: 0,
     lives: 3
 };
 
-// the start screen to intialize the game
+// Draw the start screen
 function drawStartScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "60px Arial";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
@@ -30,98 +43,100 @@ function drawStartScreen() {
     ctx.fillText("Click or Press Any Key to Start", canvas.width / 2, canvas.height / 2 + 20);
 }
 
-// INITIALIZATION 
-// The init function runs only once when the game first loads. Its job is to set up the starting positions of all the game objects and then kick off the main game loop.
+// Initialize the game
 function init() {
     ball.x = canvas.width / 2;
     ball.y = canvas.height - 50;
     paddle.x = (canvas.width - paddle.width) / 2;
     
-    // to create the first level's brick layout.
     generateBricks(canvas); 
-
     drawStartScreen();
 }
 
-// MAIN GAME LOOP 
+// Main game loop
 function draw() {
-    // erases everything on the canvas. so yoy can't see ball pervious postions.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    //draw every element in its new position for the current frame
-    drawBricks(ctx);
+    // Draw game elements
+    drawBricks(ctx, canvas);
     drawParticles(ctx);
+    drawPowerUps(ctx);
     drawBall(ctx);
     drawPaddle(ctx);
-    drawScore(ctx, gameState.score);
-    drawLives(ctx, gameState.lives);
+    updateScoreDisplay(gameState.score);
+    updateLivesDisplay(gameState.lives);
     backgroundsound();
 
-    // update the score if the ball hit a brick and play a sound effect
+    // Handle brick collisions
     let scoreFromCollision = brickCollisionDetection(ball, bricks);
+
     if (scoreFromCollision > 0) {
         gameState.score += scoreFromCollision;
         checkAndUpdateHighScore(gameState.score);
         hitSound.play();
+        
+        // Spawn power-ups for newly broken bricks
+        for (const brick of bricks) {
+            if (!brick.alive && !brick.checked) {
+                brick.checked = true;
+                spawnPowerUp(brick);
+            }
+        }
     }
     
-    // checks if all bricks have been broken so you can advance to next level
     handleLevelCompletion(ball, paddle, canvas);
 
-    // Paddle movement
+    // Move paddle based on input
     if (rightPressed && paddle.x < canvas.width - paddle.width) {
         paddle.x += paddle.speed;
     } else if (leftPressed && paddle.x > 0) {
         paddle.x -= paddle.speed;
     }
 
-    // update ball movement
+    // Update ball position
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Check for left and right wall collision
+    // Handle ball collisions with walls
     if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
         ball.dx = -ball.dx;
     }
-    // Check for top wall collision
     if (ball.y + ball.dy < ball.radius) {
         ball.dy = -ball.dy;
-      // Check for bottom wall collision  
-    } else if (ball.y + ball.dy > canvas.height - (ball.radius*2)) {
-        if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) { // if it hit the paddle it reflect and play a sound
+    } else if (ball.y + ball.dy > canvas.height - (ball.radius * 2)) {
+        // Check for paddle collision
+        if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
             ball.dy = -ball.dy;
             paddleSound.play();
-        } else { // if it hit the bottom you lose a live
+        } else {
+            // Lose a life
             gameState.lives--;
             if (gameState.lives <= 0) {
-                alert("GAME OVER\nFinal Score: " + gameState.score); // game over with the score
-                ball.dy *=-1; // ball moving up 
-                document.location.reload(); // restart the game
+                showGameOverModal(gameState.score);
+                return; // Stop the game loop
             } else {
-                // reset for the next try
+                // Reset ball and paddle
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height - 50;
                 paddle.x = (canvas.width - paddle.width) / 2;
-                ball.dy *=-1; // ball moving up 
+                ball.dy *= -1;
             }
         }
     }
-    //updates and redraws one frame of the game.
+
+    updatePowerUps(paddle, canvas, gameState);
+
     requestAnimationFrame(draw);
 }
 
-
+// Start the game on user input
 function startGame() {
-    // Remove the event listeners so they don't run again.
     document.removeEventListener('keydown', startGame);
     document.removeEventListener('click', startGame);
-    
-    // Call draw() for the first time to kick off the animation loop.
     draw();
 }
 
-// run the intializing function
+// Initialize and set up event listeners
 init();
-
 document.addEventListener('keydown', startGame);
 document.addEventListener('click', startGame);
