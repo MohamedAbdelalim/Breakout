@@ -113,3 +113,5 @@ export function handleLevelCompletion(ball, paddle, canvas) {
         paddle.x = (canvas.width - paddle.width) / 2;
     }
 }
+
+
