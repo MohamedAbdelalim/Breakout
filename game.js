@@ -31,6 +31,7 @@ const levelButtons = document.querySelectorAll('.levelBtn');
 const backBtn = document.getElementById('backBtn');
 let selectedLevel = "easy"; // default level
 
+
 levelsBtn.addEventListener('click', () => {
   menu.style.display = 'none';
   levelsMenu.style.display = 'flex';
@@ -213,8 +214,29 @@ function draw() {
       if (gameState.lives <= 0) {
         // for return to main menu when lost 
         alert(`GAME OVER\nFinal Score: ${gameState.score}`);
-        showMenu();
-        return; // stop game
+        // showMenu();
+        // return; // stop game
+
+          // stop sound
+            backgroundSound.pause();
+            backgroundSound.currentTime = 0;
+
+            // stop drawing in frames
+            cancelAnimationFrame(animationId);
+
+            // stop drawing in frames
+            canvas.style.display = 'none';
+
+
+            levelsMenu.style.display = 'flex'; // show levels menu
+            menu.style.display = 'none';       // hide main menu
+
+            // reset values
+            gameState.score = 0;
+            gameState.lives = 3;
+            return;
+
+
       } else {
         ball.x = canvas.width / 2;
         ball.y = canvas.height - 50;
