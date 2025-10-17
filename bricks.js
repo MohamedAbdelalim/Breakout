@@ -2,10 +2,10 @@ import {ball} from "./ball.js";
 
 //  Handle Bricks and multi-levels
 
-let level = 1;
+export let level = 1; // MODIFIED: Exported level
 let brickRowCount = 4;
 let brickColCount = 5;
-let speed =5;
+let speed = 5;
 
 export let bricks = []; // The main array holding the brick objects
 
@@ -52,10 +52,11 @@ export function generateBricks(canvas) {
 // - Drawing the colored bricks for the current level with a small border effect.
 export function drawBricks(ctx) {
 
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#ffffffff";
-    ctx.textAlign = "center";
-    ctx.fillText("Level: " + level, canvas.width/2, 30);
+    // MODIFIED: Removed level text from canvas drawing
+    // ctx.font = "24px Arial";
+    // ctx.fillStyle = "#ffffffff";
+    // ctx.textAlign = "center";
+    // ctx.fillText("Level: " + level, canvas.width/2, 30);
 
     for (const brick of bricks) {
         if (brick.alive) {
@@ -112,4 +113,13 @@ export function handleLevelCompletion(ball, paddle, canvas) {
         ball.y = canvas.height - 50;
         paddle.x = (canvas.width - paddle.width) / 2;
     }
+}
+
+// NEW: Reset progression back to level 1 and base difficulty
+export function resetToLevelOne(canvas) {
+    level = 1;
+    brickRowCount = 4;
+    brickColCount = 5;
+    speed = 5;
+    generateBricks(canvas);
 }
