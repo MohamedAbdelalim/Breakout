@@ -6,23 +6,22 @@ export const paddle = {
 };
 
 export function drawPaddle(ctx) {
-    ctx.beginPath();
-    let paddleY = ctx.canvas.height - paddle.height - 10; // A little offset from bottom
-    ctx.rect(paddle.x, paddleY, paddle.width, paddle.height);
-
-    // Paddle glow effect
+    // Use save/restore to avoid affecting other drawing operations
+    ctx.save();
+    
+    // Set paddle properties
+    ctx.fillStyle = '#FFFFFF';
     ctx.shadowColor = '#00FFFF';
     ctx.shadowBlur = 20;
     
-    ctx.fillStyle = '#FFFFFF'; // White paddle
+    // Draw paddle with single path operation
+    ctx.beginPath();
+    let paddleY = ctx.canvas.height - paddle.height - 10; // A little offset from bottom
+    ctx.rect(paddle.x, paddleY, paddle.width, paddle.height);
     ctx.fill();
-    ctx.closePath();
-
-    // Reset shadow properties
     
-    // to make other element not effictive by it  
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    // Restore context state
+    ctx.restore();
 }
 
 

@@ -1,25 +1,29 @@
-// Retrieve high score from localStorage, default to 0 if not set
-let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
-
-// Update initial high score display
-const highScoreElement = document.getElementById("high-score");
-if (highScoreElement) {
-    highScoreElement.textContent = highScore;
-}
+// Note: High score display is now handled dynamically per player in game.js
+// This ensures each player sees their own high score from the leaderboard
 
 // Check and update high score if current score is higher
 export function checkAndUpdateHighScore(currentScore, username = null) {
-    if (currentScore > highScore) {
-        highScore = currentScore;
-        localStorage.setItem("highScore", highScore);
+    if (!username) return;
+    
+    const userHighScore = getHighScore(username);
+    if (currentScore > userHighScore) {
+        // Update user's individual high score storage
+        localStorage.setItem(userKey(username), currentScore.toString());
+        
+        // Update leaderboard as well
+        upsertLeaderboardScore(username, currentScore);
+        
+        // Update display immediately with visual feedback
         const scoreElement = document.getElementById("high-score");
         if (scoreElement) {
-            scoreElement.textContent = highScore;
+            scoreElement.textContent = currentScore;
             // Add visual feedback for new high score
             scoreElement.style.animation = "glow 0.5s ease-in-out";
+            scoreElement.style.color = "#ffd700"; // Gold color for new high score
             setTimeout(() => {
                 scoreElement.style.animation = "";
-            }, 500);
+                scoreElement.style.color = ""; // Reset color
+            }, 1000);
         }
     }
 }
@@ -135,8 +139,23 @@ function userKey(username) {
 
 export function getHighScore(username) {
     if (!username) return 0;
+    
+    // First check individual user storage
     const value = localStorage.getItem(userKey(username));
-    return value ? parseInt(value) : 0;
+    if (value) {
+        return parseInt(value);
+    }
+    
+    // If not found in individual storage, check leaderboard
+    const leaderboard = getLeaderboard();
+    const existingEntry = leaderboard.find(entry => entry.username === username);
+    if (existingEntry) {
+        // Update individual storage with leaderboard value for consistency
+        localStorage.setItem(userKey(username), existingEntry.score.toString());
+        return existingEntry.score;
+    }
+    
+    return 0;
 }
 
 // ----- Leaderboard (top scores across users) -----

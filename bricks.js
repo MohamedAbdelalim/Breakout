@@ -61,7 +61,7 @@ export function drawBricks(ctx, canvas, difficulty = 'easy', currentLevel = 1) {
         ctx.font = "24px Arial";
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
-        ctx.fillText("Level: " + currentLevel, canvas.width / 2, 30);
+        // ctx.fillText("Level: " + currentLevel, canvas.width / 2, 30);
     }
 
     for (const brick of bricks) {

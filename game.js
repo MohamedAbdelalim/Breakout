@@ -94,6 +94,16 @@ let animationId = null;
 let gamePaused = false;
 let settingsFromPause = false;
 
+// Performance optimization variables
+let lastTime = 0;
+let frameCount = 0;
+let lastUIUpdate = 0;
+const UI_UPDATE_INTERVAL = 100; // Update UI every 100ms instead of every frame
+
+// Paddle movement tracking for ball reflection
+let lastPaddleX = 0;
+let paddleVelocity = 0;
+
 // Difficulty settings
 const difficultySettings = {
     easy: { brickRows: 3, brickCols: 4, ballSpeed: 4, lives: 5 },
@@ -166,8 +176,8 @@ function setupEventListeners() {
     pauseMainMenuBtn.addEventListener('click', () => {
         pauseModal.classList.remove('active');
         stopBackgroundSound();
-        showMainMenu();
         resetGame();
+        showMainMenu();
     });
 
     // Game over menu
@@ -179,14 +189,18 @@ function setupEventListeners() {
     gameOverMainMenuBtn.addEventListener('click', () => {
         gameOverModal.classList.remove('active');
         stopBackgroundSound();
-        showMainMenu();
         resetGame();
+        showMainMenu();
     });
 
-    // ESC key for pause
+    // ESC key for pause/unpause
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && gameRunning && !gamePaused) {
-            pauseGame();
+        if (e.key === 'Escape') {
+            if (gameRunning && !gamePaused) {
+                pauseGame();
+            } else if (gamePaused) {
+                resumeGame();
+            }
         }
     });
 }
@@ -291,6 +305,12 @@ function pauseGame() {
     gamePaused = true;
     gameRunning = false;
     pauseModal.classList.add('active');
+    
+    // Cancel any pending animation frame to stop the game loop
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
 }
 
 // Resume game
@@ -298,6 +318,7 @@ function resumeGame() {
     gamePaused = false;
     gameRunning = true;
     pauseModal.classList.remove('active');
+    lastTime = performance.now(); // Reset time to prevent large delta time
     draw(); // Resume game loop
 }
 
@@ -315,8 +336,10 @@ function restartCurrentLevel() {
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty
-    gameState.lives = settings.lives;
+    // Reset lives based on difficulty (preserve lives in infinity mode)
+    if (gameState.difficulty !== 'infinity') {
+        gameState.lives = settings.lives;
+    }
     
     // Generate new bricks for current level
     generateBricks(canvas);
@@ -370,19 +393,38 @@ function updateUIBar() {
     updateScoreDisplay(gameState.score);
     updateLivesDisplay(gameState.lives);
     
-    // Update level display
+    // Update level display - only show for infinity mode
     const levelEl = document.getElementById('current-level');
-    if (levelEl) levelEl.textContent = gameState.level;
+    const levelItem = levelEl ? levelEl.parentElement : null;
+    if (levelItem) {
+        if (gameState.difficulty === 'infinity') {
+            levelItem.style.display = 'flex';
+            levelEl.textContent = gameState.level;
+        } else {
+            levelItem.style.display = 'none';
+        }
+    }
     
-    // Update high score display
+    // Update high score display with current player's high score
     const highScoreEl = document.getElementById('high-score');
     if (highScoreEl) highScoreEl.textContent = getHighScore(currentPlayer);
 }
 
 // Main game loop
-function draw() {
+function draw(currentTime = 0) {
     if (!gameRunning) return;
     
+    // Calculate delta time for frame-rate independent movement
+    const deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    
+    // Skip frame if delta time is too large (prevents large jumps)
+    if (deltaTime > 100) {
+        animationId = requestAnimationFrame(draw);
+        return;
+    }
+    
+    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw game elements
@@ -391,7 +433,13 @@ function draw() {
     drawPowerUps(ctx);
     drawBall(ctx);
     drawPaddle(ctx);
-    updateUIBar();
+    
+    // Update UI less frequently for better performance
+    if (currentTime - lastUIUpdate > UI_UPDATE_INTERVAL) {
+        updateUIBar();
+        lastUIUpdate = currentTime;
+    }
+    
     backgroundsound();
 
     // Handle brick collisions
@@ -403,10 +451,10 @@ function draw() {
         upsertLeaderboardScore(currentPlayer, gameState.score);
         playSound(hitSound);
         
-        // Update high score display immediately
+        // Update UI immediately when score changes
         updateUIBar();
         
-        // Spawn power-ups for newly broken bricks
+        // Spawn power-ups for newly broken bricks (only check when needed)
         for (const brick of bricks) {
             if (!brick.alive && !brick.checked) {
                 brick.checked = true;
@@ -425,10 +473,7 @@ function draw() {
         if (gameState.difficulty === 'infinity') {
             showLevelCompleteModal(gameState.level, () => {
                 gameState.level++;
-                updateUIBar();
                 startNextLevel();
-                levelCompleted = false;
-                gameRunning = true;
             });
         } else {
             // For other difficulties, just restart the same level
@@ -443,27 +488,50 @@ function draw() {
         }
     }
 
-    // Move paddle based on input
+    // Move paddle based on input (frame-rate independent)
+    const paddleSpeed = paddle.speed * (deltaTime / 16.67); // Normalize to 60fps
     if (rightPressed && paddle.x < canvas.width - paddle.width) {
-        paddle.x += paddle.speed;
+        paddle.x += paddleSpeed;
     } else if (leftPressed && paddle.x > 0) {
-        paddle.x -= paddle.speed;
+        paddle.x -= paddleSpeed;
     }
+    
+    // Track paddle velocity for ball reflection
+    paddleVelocity = paddle.x - lastPaddleX;
+    lastPaddleX = paddle.x;
 
-    // Update ball position
-    ball.x += ball.dx;
-    ball.y += ball.dy;
+    // Update ball position (frame-rate independent)
+    const ballSpeedX = ball.dx * (deltaTime / 16.67); // Normalize to 60fps
+    const ballSpeedY = ball.dy * (deltaTime / 16.67);
+    ball.x += ballSpeedX;
+    ball.y += ballSpeedY;
 
     // Handle ball collisions with walls
-    if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+    if (ball.x + ballSpeedX > canvas.width - ball.radius || ball.x + ballSpeedX < ball.radius) {
         ball.dx = -ball.dx;
     }
-    if (ball.y + ball.dy < ball.radius) {
+    if (ball.y + ballSpeedY < ball.radius) {
         ball.dy = -ball.dy;
-    } else if (ball.y + ball.dy > canvas.height - (ball.radius * 2)) {
+    } else if (ball.y + ballSpeedY > canvas.height - (ball.radius * 2)) {
         // Check for paddle collision
         const paddleY = canvas.height - paddle.height - 10;
         if (ball.x > paddle.x && ball.x < paddle.x + paddle.width && ball.y + ball.radius > paddleY) {
+            // Calculate ball reflection based on paddle movement
+            const paddleCenter = paddle.x + paddle.width / 2;
+            const ballOffset = ball.x - paddleCenter;
+            const normalizedOffset = ballOffset / (paddle.width / 2); // -1 to 1
+            
+            // Add paddle velocity influence to ball direction
+            const velocityInfluence = paddleVelocity * 0.3; // Adjust sensitivity
+            ball.dx = ball.dx + velocityInfluence;
+            
+            // Add angle based on hit position
+            ball.dx += normalizedOffset * 2; // Adjust angle sensitivity
+            
+            // Ensure ball doesn't go too slow or too fast
+            const maxSpeed = Math.abs(ball.dy) * 1.5;
+            ball.dx = Math.max(-maxSpeed, Math.min(maxSpeed, ball.dx));
+            
             ball.dy = -ball.dy;
             playSound(paddleSound);
         } else {
@@ -510,6 +578,10 @@ function startNextLevel() {
     ball.dy = -Math.abs(ball.dy);
     
     updateUIBar();
+    
+    // Restart the game loop
+    gameRunning = true;
+    draw();
 }
 
 // Reset game to initial state
@@ -524,13 +596,15 @@ function resetGame() {
     ball.y = canvas.height - 50;
     paddle.x = (canvas.width - paddle.width) / 2;
     
-    // Reset ball speed based on difficulty
-    const settings = difficultySettings[gameState.difficulty];
+    // Reset ball speed based on difficulty (use default if no difficulty set)
+    const settings = difficultySettings[gameState.difficulty] || difficultySettings.easy;
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty
-    gameState.lives = settings.lives;
+    // Reset lives based on difficulty (preserve lives in infinity mode)
+    if (gameState.difficulty !== 'infinity') {
+        gameState.lives = settings.lives;
+    }
     
     // Generate new bricks
     generateBricks(canvas);

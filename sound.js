@@ -1,11 +1,11 @@
 // --- AUDIO ASSETS ---
-export const backgroundSound = new Audio('./sound/backg.mp3'); // background sound 
+export const backgroundSound = new Audio('./sound/ibrkr01-20169.mp3'); // background sound 
 backgroundSound.loop = true;
 backgroundSound.volume = 0.05;
 backgroundSound.preload = 'auto';
 
-export const hitSound = new Audio('./sound/12.mp3');  // collision sound 
-hitSound.volume = 0.05;
+export const hitSound = new Audio('./sound/block-2-328875.mp3');  // collision sound 
+hitSound.volume = 0.5;
 hitSound.preload = 'auto';
 
 export const paddleSound = new Audio('./sound/paddle.mp3');  // paddle sound 
