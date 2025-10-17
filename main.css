@@ -1,13 +1,72 @@
 body{
     background-color: #EEE;
     text-align: center;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+#score-bar {
+    width: 1600px; 
+    margin: 10px auto 0 auto;
+    padding: 10px 15px;
+    background-color: rgb(50, 55, 63);
+    border: 15px solid red;
+    /* MODIFIED: Add margin-bottom for spacing */
+    margin-bottom: 5px; 
+    box-sizing: border-box;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: bold;
+    /* NEW: Add a subtle shadow for separation */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
 }
 
 canvas{
     background-color: rgb(50, 55, 63);
     border:  15px solid skyblue;
-
+    /* MODIFIED: Add margin-top for spacing and full border */
+    margin-top: 5px; 
 
     font-family: Arial, sans-serif;
     font-weight: bold;
+
+    display: block;
+    margin-left: auto; /* Ensure centering with explicit margins */
+    margin-right: auto;
+    /* NEW: Add a subtle shadow for separation */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+/* Wrap to position pause button relative to canvas */
+#game-wrap {
+    position: relative;
+    width: 1600px;
+    margin: 0 auto;
+}
+
+#pause-btn{
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+    z-index: 1100;
+}
+
+#pause-btn:hover{
+    transform: translateY(-1px);
+    filter: brightness(1.05);
 }

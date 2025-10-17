@@ -1,33 +1,76 @@
-// This variable holds the high score for the current session.
-// It loads from localStorage once when the game starts.
-let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
+// Utilities for lives rendering, per-user high scores, and leaderboard persistence
 
+// Draw lives count on the canvas (top-right)
+export function drawLives(ctx, lives) {
+    const canvas = ctx.canvas;
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "right";
+    ctx.fillText("Lives: " + lives, canvas.width - 20, 30);
+}
 
-// Checks if the current score is a new high score and saves it if it is.
-// This function must be called every time the score changes.
-export function checkAndUpdateHighScore(currentScore) {
-    if (currentScore > highScore) {
-        highScore = currentScore;
-        localStorage.setItem("highScore", highScore);
+// ----- Per-user High Score (localStorage) -----
+
+function userKey(username) {
+    return `brickBreaker_${username}`;
+}
+
+export function getHighScore(username) {
+    if (!username) return 0;
+    const value = localStorage.getItem(userKey(username));
+    return value ? parseInt(value) : 0;
+}
+
+export function checkAndUpdateHighScore(score, username) {
+    if (!username) return;
+    const current = getHighScore(username);
+    if (score > current) {
+        localStorage.setItem(userKey(username), String(score));
+        // also reflect to leaderboard store
+        upsertLeaderboardScore(username, score);
     }
 }
 
-// Draws the current score and the high score on the canvas.
+// ----- Leaderboard (top scores across users) -----
 
-export function drawScore(ctx, score) {
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#ffffffff";
-    ctx.textAlign = "left";
+const LEADERBOARD_KEY = "brickBreaker_leaderboard";
 
-    ctx.fillText("Score: " + score, 20, 30);
-    ctx.fillText("Highest Score: " + highScore, 20, 60);
-
+function getLeaderboard() {
+    const raw = localStorage.getItem(LEADERBOARD_KEY);
+    try {
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
 }
 
-// Draws the remaining lives on the canvas.
-
-export function drawLives(ctx, lives) {
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#dd8500ff";
-    ctx.fillText("Lives: " + lives, ctx.canvas.width - 100, 30);
+function setLeaderboard(entries) {
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
 }
+
+export function upsertLeaderboardScore(username, score) {
+    if (!username) return;
+    const list = getLeaderboard();
+    const existingIndex = list.findIndex(e => e.username === username);
+    if (existingIndex >= 0) {
+        // keep the highest score
+        if (score > list[existingIndex].score) {
+            list[existingIndex].score = score;
+        }
+    } else {
+        list.push({ username, score });
+    }
+    // sort desc by score and keep top 10
+    list.sort((a, b) => b.score - a.score);
+    setLeaderboard(list.slice(0, 10));
+}
+
+export function getLeaderboardTop(limit = 10) {
+    const list = getLeaderboard();
+    return list
+        .slice()
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+}
+
+

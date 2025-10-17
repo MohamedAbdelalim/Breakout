@@ -1,4 +1,4 @@
-import { createParticles } from "./bricks_animations.js";
+import { createParticles } from "./brick-animation.js";
 
 
 export function brickCollisionDetection(ball, bricks) {

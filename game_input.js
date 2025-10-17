@@ -28,4 +28,3 @@ export function mouseMoveHandler(e) {
         if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
     }
 }
-
