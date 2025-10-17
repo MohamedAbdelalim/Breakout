@@ -77,22 +77,55 @@ export function updateLevelDisplay(level) {
 }
 
 // Show level complete modal
-export function showLevelCompleteModal(level, callback) {
+export function showLevelCompleteModal(level, callback, isInfinityMode = true) {
     const modal = document.getElementById("level-complete-modal");
     const text = document.getElementById("level-complete-text");
-    const btn = document.getElementById("next-level-btn");
+    const nextBtn = document.getElementById("next-level-btn");
+    const restartBtn = document.getElementById("restart-level-complete-btn");
+    const mainMenuBtn = document.getElementById("main-menu-complete-btn");
     
     text.textContent = `Level ${level} Complete!`;
     modal.classList.add("active");
     
-    // Create new button to avoid multiple event listeners
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    
-    newBtn.addEventListener("click", () => {
-        modal.classList.remove("active");
-        if (callback) callback();
-    });
+    if (isInfinityMode) {
+        // Show "Next Level" button for infinity mode
+        nextBtn.style.display = "block";
+        restartBtn.style.display = "none";
+        mainMenuBtn.style.display = "none";
+        
+        // Create new button to avoid multiple event listeners
+        const newBtn = nextBtn.cloneNode(true);
+        nextBtn.parentNode.replaceChild(newBtn, nextBtn);
+        
+        newBtn.addEventListener("click", () => {
+            modal.classList.remove("active");
+            if (callback) callback();
+        });
+    } else {
+        // Show "Restart Level" and "Main Menu" buttons for other difficulties
+        nextBtn.style.display = "none";
+        restartBtn.style.display = "block";
+        mainMenuBtn.style.display = "block";
+        
+        // Create new buttons to avoid multiple event listeners
+        const newRestartBtn = restartBtn.cloneNode(true);
+        const newMainMenuBtn = mainMenuBtn.cloneNode(true);
+        restartBtn.parentNode.replaceChild(newRestartBtn, restartBtn);
+        mainMenuBtn.parentNode.replaceChild(newMainMenuBtn, mainMenuBtn);
+        
+        newRestartBtn.addEventListener("click", () => {
+            modal.classList.remove("active");
+            if (callback) callback();
+        });
+        
+        newMainMenuBtn.addEventListener("click", () => {
+            modal.classList.remove("active");
+            // Go to main menu
+            if (typeof window.showMainMenu === 'function') {
+                window.showMainMenu();
+            }
+        });
+    }
 }
 
 // Show game over modal

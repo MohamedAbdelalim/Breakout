@@ -8,7 +8,7 @@ export const hitSound = new Audio('./sound/block-2-328875.mp3');  // collision s
 hitSound.volume = 0.5;
 hitSound.preload = 'auto';
 
-export const paddleSound = new Audio('./sound/paddle.mp3');  // paddle sound 
+export const paddleSound = new Audio('./sound/paddel.aac');  // paddle sound 
 paddleSound.volume = 0.05;
 paddleSound.preload = 'auto';
 

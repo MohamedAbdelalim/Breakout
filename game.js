@@ -109,7 +109,7 @@ const difficultySettings = {
     easy: { brickRows: 3, brickCols: 4, ballSpeed: 4, lives: 5 },
     medium: { brickRows: 4, brickCols: 5, ballSpeed: 5, lives: 3 },
     hard: { brickRows: 5, brickCols: 6, ballSpeed: 6, lives: 2 },
-    infinity: { brickRows: 6, brickCols: 8, ballSpeed: 7, lives: 1 }
+    infinity: { brickRows: 6, brickCols: 8, ballSpeed: 7, lives: 3 }
 };
 
 // Initialize the game
@@ -184,6 +184,7 @@ function setupEventListeners() {
     restartLevelBtn.addEventListener('click', restartCurrentLevel);
     gameOverSettingsBtn.addEventListener('click', () => {
         gameOverModal.classList.remove('active');
+        resetGame();
         showSettingsMenu();
     });
     gameOverMainMenuBtn.addEventListener('click', () => {
@@ -230,6 +231,9 @@ function showMainMenu() {
     
     updateSoundButton();
 }
+
+// Make showMainMenu globally accessible
+window.showMainMenu = showMainMenu;
 
 // Show difficulty selection menu
 function showDifficultyMenu() {
@@ -319,13 +323,14 @@ function resumeGame() {
     gameRunning = true;
     pauseModal.classList.remove('active');
     lastTime = performance.now(); // Reset time to prevent large delta time
-    draw(); // Resume game loop
+    
+    animationId = requestAnimationFrame(draw);
 }
 
 // Restart current level
 function restartCurrentLevel() {
     gameOverModal.classList.remove('active');
-    
+    gameState.score = 0; // Reset score to 0
     // Reset ball and paddle positions
     ball.x = canvas.width / 2;
     ball.y = canvas.height - 50;
@@ -336,10 +341,8 @@ function restartCurrentLevel() {
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty (preserve lives in infinity mode)
-    if (gameState.difficulty !== 'infinity') {
-        gameState.lives = settings.lives;
-    }
+    // Reset lives based on difficulty (restart level gives full lives)
+    gameState.lives = settings.lives;
     
     // Generate new bricks for current level
     generateBricks(canvas);
@@ -469,22 +472,25 @@ function draw(currentTime = 0) {
         levelCompleted = true;
         gameRunning = false;
         
-        // Only show level completion for infinity mode
+        // Show level completion modal for all difficulties
         if (gameState.difficulty === 'infinity') {
             showLevelCompleteModal(gameState.level, () => {
                 gameState.level++;
                 startNextLevel();
-            });
+            }, true); // true for infinity mode
         } else {
-            // For other difficulties, just restart the same level
-            setTimeout(() => {
+            // For easy, medium, hard - show congratulations with restart/main menu options
+            showLevelCompleteModal(gameState.level, () => {
+                // Restart the same level
                 generateBricks(canvas);
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height - 50;
                 paddle.x = (canvas.width - paddle.width) / 2;
                 levelCompleted = false;
                 gameRunning = true;
-            }, 1000);
+                lastTime = performance.now(); // Reset time to prevent large delta time
+                animationId = requestAnimationFrame(draw); // Restart the game loop properly
+            }, false); // false for other difficulties
         }
     }
 
@@ -536,7 +542,9 @@ function draw(currentTime = 0) {
             playSound(paddleSound);
         } else {
             // Lose a life
-            gameState.lives--;
+            if (gameState.lives > 0) {
+                gameState.lives--;
+            }
             if (gameState.lives <= 0) {
                 gameRunning = false;
                 stopBackgroundSound();
@@ -547,7 +555,7 @@ function draw(currentTime = 0) {
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height - 50;
                 paddle.x = (canvas.width - paddle.width) / 2;
-                ball.dy = Math.abs(ball.dy);
+                ball.dy = -Math.abs(ball.dy);
             }
         }
     }
@@ -581,7 +589,9 @@ function startNextLevel() {
     
     // Restart the game loop
     gameRunning = true;
-    draw();
+
+    // THE FIX: Use requestAnimationFrame to resume the loop correctly.
+    animationId = requestAnimationFrame(draw);
 }
 
 // Reset game to initial state
@@ -601,8 +611,11 @@ function resetGame() {
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty (preserve lives in infinity mode)
+    // Reset lives based on difficulty (preserve lives in infinity mode during level progression)
     if (gameState.difficulty !== 'infinity') {
+        gameState.lives = settings.lives;
+    } else if (gameState.lives <= 0) {
+        // Only reset lives in infinity mode if they're at 0 (game over state)
         gameState.lives = settings.lives;
     }
     

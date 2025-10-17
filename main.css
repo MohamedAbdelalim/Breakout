@@ -218,6 +218,19 @@ canvas {
     transform: translateY(0);
 }
 
+/* Level complete buttons styling */
+#level-complete-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+#level-complete-buttons .modal-btn {
+    width: 200px;
+    min-width: 200px;
+}
+
 /* Background planets */
 .planet {
     position: fixed;
