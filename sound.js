@@ -13,6 +13,6 @@ paddleSound.volume = 0.05;
 
 // fuction to make background sound work automatic when start loading the page 
 export function backgroundsound() {
-  backgroundSound.play();
+  // backgroundSound.play();
 }
 

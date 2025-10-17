@@ -1,127 +1,388 @@
-// Import game elements
 import { ball, drawBall } from "./ball.js";
-import { paddle, drawPaddle } from "./paddle.js";
+import { paddle, drawPaddle ,expandPaddle, boostPaddleSpeed,shrinkagePaddle} from "./paddle.js";
 import { bricks, generateBricks, drawBricks, handleLevelCompletion } from "./bricks.js";
 import { brickCollisionDetection } from "./collision.js";
 import { rightPressed, leftPressed } from "./game_input.js";
 import { drawParticles } from "./bricks_animations.js";
 import { drawScore, drawLives, checkAndUpdateHighScore } from "./extra_features.js";
-import { backgroundsound,hitSound, paddleSound } from "./sound.js";
+import { backgroundsound, hitSound, paddleSound, backgroundSound } from "./sound.js";
 
-// CANVAS & CONTEXT SETUP 
+
+
+
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// GAME STATE 
-let gameState = {
-    score: 0,
-    lives: 3
+// menu
+const menu = document.getElementById('menu');
+const startBtn = document.getElementById('startBtn');
+const scoreBtn = document.getElementById('scoreBtn');
+const levelsBtn = document.getElementById('levelsBtn');
+const soundBtn = document.getElementById('soundBtn'); 
+const infoText = document.getElementById('infoText');
+
+let gameState = { score: 0, lives: 3 };
+let isSoundOn = false; // sound default 
+
+
+// ====== LEVEL MENU ======
+const levelsMenu = document.getElementById('levelsMenu');
+const levelButtons = document.querySelectorAll('.levelBtn');
+const backBtn = document.getElementById('backBtn');
+let selectedLevel = "easy"; // default level
+
+
+levelsBtn.addEventListener('click', () => {
+  menu.style.display = 'none';
+  levelsMenu.style.display = 'flex';
+});
+
+backBtn.addEventListener('click', () => {
+  levelsMenu.style.display = 'none';
+  menu.style.display = 'flex';
+});
+
+levelButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedLevel = btn.dataset.level;
+    levelsMenu.style.display = 'none';
+    menu.style.display = 'none';
+    canvas.style.display = 'block';
+    if (isSoundOn) backgroundSound.play();
+    startGame(selectedLevel);
+  });
+});
+
+
+
+
+// back ground sound button
+soundBtn.addEventListener('click', () => {
+  if (isSoundOn) {
+    backgroundSound.pause();
+    isSoundOn = false;
+    soundBtn.textContent = " Sound: OFF";
+  } else {
+    backgroundSound.play();
+    isSoundOn = true;
+    soundBtn.textContent = " Sound: ON";
+  }
+});
+
+// high score button
+scoreBtn.addEventListener('click', () => {
+
+
+  //  const scores = loadScores();
+  // if (scores.length === 0) {
+  //   alert("🚫 No scores saved yet!");
+  //   return;
+  // }
+  // showLeaderboard();
+
+  // showLeaderboard(); // show leaderboard table
+
+  const highScore = localStorage.getItem('highScore') || 0;
+  infoText.textContent = `🏆 Highest Score: ${highScore}`;
+});
+
+// levels button
+levelsBtn.addEventListener('click', () => {
+  infoText.textContent = " Levels feature coming soon!";
+});
+
+// start button
+startBtn.addEventListener('click', () => {
+  menu.style.display = 'none';
+  canvas.style.display = 'block';
+  if (isSoundOn) backgroundSound.play(); // for chech sound
+
+
+  // const name = prompt("enter your name");
+  //     if (!name) return alert("You must enter a name!");
+
+  //     // Here you can calculate the score based on your game
+  //     const randomScore = Math.floor(Math.random() * 100); // Temporary example
+  //     alert(`Your score: ${randomScore}`);
+
+  //     saveScore(name, randomScore);
+  //     console.log("Saved score:", loadScores());
+
+
+
+  startGame();
+});
+
+
+
+function init(level) {
+  ball.x = canvas.width / 2;
+  ball.y = canvas.height - 50;
+  paddle.x = (canvas.width - paddle.width) / 2;
+
+  switch (level) {
+    case "easy":
+      ball.dx = 4; ball.dy = -4;
+      paddle.width = 200;
+      generateBricks(canvas, 3, 6); // 3 صفوف من الطوب
+      break;
+
+    case "medium":
+      ball.dx = 6; ball.dy = -6;
+      paddle.width = 150;
+      generateBricks(canvas, 4, 8);
+      break;
+
+    case "hard":
+      ball.dx = 8; ball.dy = -8;
+      paddle.width = 120;
+      generateBricks(canvas, 5, 10);
+      break;
+
+    case "infinity":
+      ball.dx = 6; ball.dy = -6;
+      paddle.width = 130;
+      generateBricks(canvas, 4, 8);
+      startInfiniteMode();
+      break;
+  }
+}
+
+function startGame(level = "easy") {
+  init(level);
+  draw();
+}
+
+
+
+function startInfiniteMode() {
+  setInterval(() => {
+    generateBricks(canvas, 1, 8, true); // صف جديد كل 10 ثواني
+  }, 10000);
+}
+
+
+// function init() {
+//   ball.x = canvas.width / 2;
+//   ball.y = canvas.height - 50;
+//   paddle.x = (canvas.width - paddle.width) / 2;
+//   generateBricks(canvas);
+// }
+
+let animationId; // var for save fram number
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBricks(ctx);
+  drawParticles(ctx);
+  drawBall(ctx);
+  drawPaddle(ctx);
+  drawScore(ctx, gameState.score);
+  drawLives(ctx, gameState.lives);
+  backgroundsound();
+
+  let scoreFromCollision = brickCollisionDetection(ball, bricks);
+  if (scoreFromCollision > 0) {
+    gameState.score += scoreFromCollision;
+    checkAndUpdateHighScore(gameState.score);
+     if (isSoundOn) hitSound.play(); // make collection sound play when be in on mode 
+  }
+
+  handleLevelCompletion(ball, paddle, canvas);
+
+  if (rightPressed && paddle.x < canvas.width - paddle.width) {
+    paddle.x += paddle.speed;
+  } else if (leftPressed && paddle.x > 0) {
+    paddle.x -= paddle.speed;
+  }
+
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius)
+    ball.dx = -ball.dx;
+
+  if (ball.y + ball.dy < ball.radius)
+    ball.dy = -ball.dy;
+  else if (ball.y + ball.dy > canvas.height - (ball.radius * 2)) {
+    if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+      ball.dy = -ball.dy;
+      if (isSoundOn) paddleSound.play(); // make padle sound play when be in on mode 
+
+    } else {
+      gameState.lives--;
+      if (gameState.lives <= 0) {
+        // for return to main menu when lost 
+        alert(`GAME OVER\nFinal Score: ${gameState.score}`);
+        // showMenu();
+        // return; // stop game
+
+          // stop sound
+            backgroundSound.pause();
+            backgroundSound.currentTime = 0;
+
+            // stop drawing in frames
+            cancelAnimationFrame(animationId);
+
+            // stop drawing in frames
+            canvas.style.display = 'none';
+
+
+            levelsMenu.style.display = 'flex'; // show levels menu
+            menu.style.display = 'none';       // hide main menu
+
+            // reset values
+            gameState.score = 0;
+            gameState.lives = 3;
+            return;
+
+
+      } else {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height - 50;
+        paddle.x = (canvas.width - paddle.width) / 2;
+        ball.dy *= -1;
+      }
+    }
+  }
+
+  animationId = requestAnimationFrame(draw);
+}
+
+// function startGame() {
+//   init();
+//   draw();
+// }
+
+window.onload = () => {
+  canvas.style.display = 'none';
 };
 
-// the start screen to intialize the game
-function drawStartScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    ctx.font = "60px Arial";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("BRICK BREAKER", canvas.width / 2, canvas.height / 2 - 40);
-    
-    ctx.font = "30px Arial";
-    ctx.fillText("Click or Press Any Key to Start", canvas.width / 2, canvas.height / 2 + 20);
-}
 
-// INITIALIZATION 
-// The init function runs only once when the game first loads. Its job is to set up the starting positions of all the game objects and then kick off the main game loop.
-function init() {
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height - 50;
-    paddle.x = (canvas.width - paddle.width) / 2;
-    
-    // to create the first level's brick layout.
-    generateBricks(canvas); 
 
-    drawStartScreen();
-}
+function showMenu() {
+  // sound off
+  backgroundSound.pause();
+  backgroundSound.currentTime = 0;
 
-// MAIN GAME LOOP 
-function draw() {
-    // erases everything on the canvas. so yoy can't see ball pervious postions.
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // stop drawing in frames 
+  cancelAnimationFrame(animationId);
 
-    //draw every element in its new position for the current frame
-    drawBricks(ctx);
-    drawParticles(ctx);
-    drawBall(ctx);
-    drawPaddle(ctx);
-    drawScore(ctx, gameState.score);
-    drawLives(ctx, gameState.lives);
-    backgroundsound();
+  // stop canvas and show menu 
+  canvas.style.display = 'none';
+  menu.style.display = 'block';
 
-    // update the score if the ball hit a brick and play a sound effect
-    let scoreFromCollision = brickCollisionDetection(ball, bricks);
-    if (scoreFromCollision > 0) {
-        gameState.score += scoreFromCollision;
-        checkAndUpdateHighScore(gameState.score);
-        hitSound.play();
-    }
-    
-    // checks if all bricks have been broken so you can advance to next level
-    handleLevelCompletion(ball, paddle, canvas);
+  // reset
+  gameState.score = 0;
+  gameState.lives = 3;
 
-    // Paddle movement
-    if (rightPressed && paddle.x < canvas.width - paddle.width) {
-        paddle.x += paddle.speed;
-    } else if (leftPressed && paddle.x > 0) {
-        paddle.x -= paddle.speed;
-    }
+  // update high score text 
+  const highScore = localStorage.getItem('highScore') || 0;
+  infoText.textContent = ` Highest Score: ${highScore}`;
 
-    // update ball movement
-    ball.x += ball.dx;
-    ball.y += ball.dy;
-
-    // Check for left and right wall collision
-    if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
-        ball.dx = -ball.dx;
-    }
-    // Check for top wall collision
-    if (ball.y + ball.dy < ball.radius) {
-        ball.dy = -ball.dy;
-      // Check for bottom wall collision  
-    } else if (ball.y + ball.dy > canvas.height - (ball.radius*2)) {
-        if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) { // if it hit the paddle it reflect and play a sound
-            ball.dy = -ball.dy;
-            paddleSound.play();
-        } else { // if it hit the bottom you lose a live
-            gameState.lives--;
-            if (gameState.lives <= 0) {
-                alert("GAME OVER\nFinal Score: " + gameState.score); // game over with the score
-                ball.dy *=-1; // ball moving up 
-                document.location.reload(); // restart the game
-            } else {
-                // reset for the next try
-                ball.x = canvas.width / 2;
-                ball.y = canvas.height - 50;
-                paddle.x = (canvas.width - paddle.width) / 2;
-                ball.dy *=-1; // ball moving up 
-            }
-        }
-    }
-    //updates and redraws one frame of the game.
-    requestAnimationFrame(draw);
+  // update sound button text
+  soundBtn.textContent = isSoundOn ? " Sound: ON" : " Sound: OFF";
 }
 
 
-function startGame() {
-    // Remove the event listeners so they don't run again.
-    document.removeEventListener('keydown', startGame);
-    document.removeEventListener('click', startGame);
-    
-    // Call draw() for the first time to kick off the animation loop.
-    draw();
-}
 
-// run the intializing function
-init();
 
-document.addEventListener('keydown', startGame);
-document.addEventListener('click', startGame);
+// const STORAGE_KEY = "game_scores";
+
+    // // دالة لتحميل النتائج القديمة
+    // function loadScores() {
+    //   return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    // }
+
+    // // دالة لحفظ نتيجة جديدة
+    // function saveScore(name, score) {
+    //   const scores = loadScores();
+    //   scores.push({ name, score, time: new Date().toLocaleString() });
+    //   localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+    // }
+
+    // // عرض الجدول
+    // function showLeaderboard() {
+    //   const table = document.getElementById("leaderboard");
+    //   const tbody = table.querySelector("tbody");
+    //   tbody.innerHTML = "";
+
+    //   const scores = loadScores().sort((a, b) => b.score - a.score);
+
+    //   scores.forEach((s, i) => {
+    //     const row = `<tr>
+    //       <td>${i + 1}</td>
+    //       <td>${s.name}</td>
+    //       <td>${s.score}</td>
+    //       <td>${s.time}</td>
+    //     </tr>`;
+    //     tbody.innerHTML += row;
+    //   });
+
+    //   table.style.display = "table";
+    // }
+
+
+
+    // document.getElementById("startBtn").addEventListener("click", () => {
+    //   const name = prompt("enter your name");
+    //   if (!name) return alert("You must enter a name!");
+
+    //   // Here you can calculate the score based on your game
+    //   const randomScore = Math.floor(Math.random() * 100); // Temporary example
+    //   alert(`Your score: ${randomScore}`);
+
+    //   saveScore(name, randomScore);
+    // });
+
+
+     
+    // document.getElementById("scoreBtn").addEventListener("click", showLeaderboard);
+ 
+
+
+
+
+
+//     function loadScores() {
+//   try {
+//     return JSON.parse(localStorage.getItem("game_scores")) || [];
+//   } catch {
+//     return [];
+//   }
+// }
+
+// function saveScore(name, score) {
+//   const scores = loadScores();
+//   scores.push({ name, score, time: new Date().toLocaleString() });
+//   localStorage.setItem("game_scores", JSON.stringify(scores));
+//   console.log("✅ Saved:", scores);
+// }
+
+// function showLeaderboard() {
+//   const table = document.getElementById("leaderboard");
+//   const tbody = table.querySelector("tbody");
+//   tbody.innerHTML = "";
+
+//   const scores = loadScores().sort((a, b) => b.score - a.score);
+//   if (scores.length === 0) {
+//     alert("🚫 No saved scores yet!");
+//     return;
+//   }
+
+//   scores.forEach((s, i) => {
+//     const row = `<tr>
+//       <td>${i + 1}</td>
+//       <td>${s.name}</td>
+//       <td>${s.score}</td>
+//       <td>${s.time}</td>
+//     </tr>`;
+//     tbody.innerHTML += row;
+//   });
+
+//   table.style.display = "table";
+// }
+
+
+
+
