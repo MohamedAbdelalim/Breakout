@@ -2,55 +2,62 @@
 let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
 
 // Update initial high score display
-document.getElementById("high-score").textContent = highScore;
+const highScoreElement = document.getElementById("high-score");
+if (highScoreElement) {
+    highScoreElement.textContent = highScore;
+}
 
 // Check and update high score if current score is higher
-export function checkAndUpdateHighScore(currentScore) {
+export function checkAndUpdateHighScore(currentScore, username = null) {
     if (currentScore > highScore) {
         highScore = currentScore;
         localStorage.setItem("highScore", highScore);
-        document.getElementById("high-score").textContent = highScore;
-        
-        // Add visual feedback for new high score
         const scoreElement = document.getElementById("high-score");
-        scoreElement.style.animation = "glow 0.5s ease-in-out";
-        setTimeout(() => {
-            scoreElement.style.animation = "";
-        }, 500);
+        if (scoreElement) {
+            scoreElement.textContent = highScore;
+            // Add visual feedback for new high score
+            scoreElement.style.animation = "glow 0.5s ease-in-out";
+            setTimeout(() => {
+                scoreElement.style.animation = "";
+            }, 500);
+        }
     }
 }
 
 // Update the current score display with animation
 export function updateScoreDisplay(score) {
     const element = document.getElementById("current-score");
-    element.textContent = score;
-    
-    // Add score change animation
-    element.style.transform = "scale(1.2)";
-    setTimeout(() => {
-        element.style.transform = "scale(1)";
-    }, 200);
+    if (element) {
+        element.textContent = score;
+        // Add score change animation
+        element.style.transform = "scale(1.2)";
+        setTimeout(() => {
+            element.style.transform = "scale(1)";
+        }, 200);
+    }
 }
 
 // Update the lives display with visual feedback for changes
 export function updateLivesDisplay(lives) {
     const element = document.getElementById("lives-count");
-    const oldValue = parseInt(element.textContent);
-    element.textContent = lives;
-    
-    // Add visual feedback for life changes
-    if (lives < oldValue) {
-        element.style.color = "#ff6b6b";
-        element.style.animation = "shake 0.5s ease-in-out";
-    } else if (lives > oldValue) {
-        element.style.color = "#4facfe";
-        element.style.animation = "bounce 0.5s ease-in-out";
+    if (element) {
+        const oldValue = parseInt(element.textContent);
+        element.textContent = lives;
+        
+        // Add visual feedback for life changes
+        if (lives < oldValue) {
+            element.style.color = "#ff6b6b";
+            element.style.animation = "shake 0.5s ease-in-out";
+        } else if (lives > oldValue) {
+            element.style.color = "#4facfe";
+            element.style.animation = "bounce 0.5s ease-in-out";
+        }
+        
+        setTimeout(() => {
+            element.style.color = "";
+            element.style.animation = "";
+        }, 500);
     }
-    
-    setTimeout(() => {
-        element.style.color = "";
-        element.style.animation = "";
-    }, 500);
 }
 
 // Update the level display with animation
@@ -88,19 +95,9 @@ export function showLevelCompleteModal(level, callback) {
 export function showGameOverModal(finalScore) {
     const modal = document.getElementById("game-over-modal");
     const text = document.getElementById("final-score-text");
-    const btn = document.getElementById("restart-btn");
     
     text.textContent = `Final Score: ${finalScore}`;
     modal.classList.add("active");
-    
-    // Create new button to avoid multiple event listeners
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    
-    newBtn.addEventListener("click", () => {
-        modal.classList.remove("active");
-        location.reload();
-    });
 }
 
 // Add CSS animations for visual effects
@@ -130,17 +127,6 @@ styleSheet.textContent = `
     }
 `;
 document.head.appendChild(styleSheet);
-// Utilities for lives rendering, per-user high scores, and leaderboard persistence
-
-// Draw lives count on the canvas (top-right)
-export function drawLives(ctx, lives) {
-    const canvas = ctx.canvas;
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "right";
-    ctx.fillText("Lives: " + lives, canvas.width - 20, 30);
-}
-
 // ----- Per-user High Score (localStorage) -----
 
 function userKey(username) {
@@ -151,16 +137,6 @@ export function getHighScore(username) {
     if (!username) return 0;
     const value = localStorage.getItem(userKey(username));
     return value ? parseInt(value) : 0;
-}
-
-export function checkAndUpdateHighScore(score, username) {
-    if (!username) return;
-    const current = getHighScore(username);
-    if (score > current) {
-        localStorage.setItem(userKey(username), String(score));
-        // also reflect to leaderboard store
-        upsertLeaderboardScore(username, score);
-    }
 }
 
 // ----- Leaderboard (top scores across users) -----

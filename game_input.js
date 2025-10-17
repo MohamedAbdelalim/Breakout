@@ -1,4 +1,8 @@
 import {paddle} from "./paddle.js";
+
+// Get canvas reference
+const canvas = document.getElementById('canvas');
+
 // INPUT HANDLING 
 export let rightPressed = false;
 export let leftPressed = false;
@@ -21,7 +25,14 @@ export function keyUpHandler(e) {
 
 // for mouse paddle movement
 export function mouseMoveHandler(e) {
-    let relativeX = e.clientX - canvas.offsetLeft;
+    // Get canvas position relative to viewport
+    const canvasRect = canvas.getBoundingClientRect();
+    let relativeX = e.clientX - canvasRect.left;
+    
+    // Scale mouse position to canvas coordinates
+    const scaleX = canvas.width / canvasRect.width;
+    relativeX *= scaleX;
+    
     if (relativeX > 0 && relativeX < canvas.width) {
         paddle.x = relativeX - paddle.width / 2;
         if (paddle.x < 0) paddle.x = 0;

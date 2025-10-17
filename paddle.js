@@ -55,6 +55,51 @@ export function shrinkagePaddle(duration = 5000) {
     }, duration);
 }
 
+// Power-up effect tracking
+let activePowerUps = new Map();
+
+// Apply temporary power-up effect
+export function applyPowerUp(type, duration = 5000) {
+    // Clear any existing power-up of the same type
+    if (activePowerUps.has(type)) {
+        clearTimeout(activePowerUps.get(type));
+    }
+    
+    const originalWidth = paddle.width;
+    const originalSpeed = paddle.speed;
+    
+    if (type === "expand") {
+        paddle.width = Math.min(paddle.width * 1.5, 250); // Expand paddle (with max limit)
+        const timeoutId = setTimeout(() => {
+            paddle.width = originalWidth;
+            activePowerUps.delete(type);
+        }, duration);
+        activePowerUps.set(type, timeoutId);
+    } else if (type === "shrink") {
+        paddle.width = Math.max(paddle.width * 0.5, 50); // Shrink paddle (with min limit)
+        const timeoutId = setTimeout(() => {
+            paddle.width = originalWidth;
+            activePowerUps.delete(type);
+        }, duration);
+        activePowerUps.set(type, timeoutId);
+    } else if (type === "speed") {
+        paddle.speed *= 1.8; // Increase speed
+        const timeoutId = setTimeout(() => {
+            paddle.speed = originalSpeed;
+            activePowerUps.delete(type);
+        }, duration);
+        activePowerUps.set(type, timeoutId);
+    }
+}
+
+// Clear all active power-ups
+export function clearAllPowerUps() {
+    activePowerUps.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+    });
+    activePowerUps.clear();
+}
+
 
 
 

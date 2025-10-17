@@ -1,5 +1,7 @@
 // Import ball object for reference
 import { ball } from "./ball.js";
+import { showLevelCompleteModal } from "./extra_features.js";
+import { applyPowerUp } from "./paddle.js";
 
 // Game state variables
 let level = 1;
@@ -53,12 +55,14 @@ export function generateBricks(canvas) {
 }
 
 // Draw bricks with gradient and frozen effects
-export function drawBricks(ctx, canvas) {
-    // Draw level text
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center";
-    ctx.fillText("Level: " + level, canvas.width / 2, 30);
+export function drawBricks(ctx, canvas, difficulty = 'easy', currentLevel = 1) {
+    // Draw level text only for infinity mode
+    if (difficulty === 'infinity') {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.fillText("Level: " + currentLevel, canvas.width / 2, 30);
+    }
 
     for (const brick of bricks) {
         if (brick.alive) {
@@ -308,8 +312,9 @@ export function updatePowerUps(paddle, canvas, livesObj) {
             }
 
             // Check for collision with paddle
+            const paddleY = canvas.height - paddle.height - 10;
             if (
-                p.y + p.radius > paddle.y &&
+                p.y + p.radius > paddleY &&
                 p.x > paddle.x &&
                 p.x < paddle.x + paddle.width
             ) {
@@ -318,9 +323,9 @@ export function updatePowerUps(paddle, canvas, livesObj) {
                 if (p.type === "life") {
                     livesObj.lives++; // Add a life
                 } else if (p.type === "expand") {
-                    paddle.width = Math.min(paddle.width * 1.3, canvas.width * 0.3); // Expand paddle (with max limit)
+                    applyPowerUp("expand", 5000); // Expand paddle for 5 seconds
                 } else if (p.type === "shrink") {
-                    paddle.width = Math.max(paddle.width * 0.7, canvas.width * 0.05); // Shrink paddle (with min limit)
+                    applyPowerUp("shrink", 5000); // Shrink paddle for 5 seconds
                 }
             }
         }
@@ -360,6 +365,7 @@ export function handleLevelCompletion(ball, paddle, canvas) {
         });
     }
 }
+
 
 // NEW: Reset progression back to level 1 and base difficulty
 export function resetToLevelOne(canvas) {

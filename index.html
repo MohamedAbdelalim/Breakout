@@ -38,6 +38,12 @@
 
         <!-- Game canvas -->
         <canvas id="canvas" width="1600" height="900"></canvas>
+        
+        <!-- HTML UI Elements that game.js references -->
+        <div id="score" style="display: none;"></div>
+        <div id="level" style="display: none;"></div>
+        <div id="highScore" style="display: none;"></div>
+        <button id="pause-btn" style="display: none;">Pause</button>
     </div>
 
     <!-- Level complete modal -->
@@ -49,16 +55,87 @@
         </div>
     </div>
 
+    <!-- Pause modal -->
+    <div id="pause-modal" class="modal">
+        <div class="modal-content">
+            <h2>Game Paused</h2>
+            <button id="resume-btn" class="modal-btn">Resume</button>
+            <button id="pause-settings-btn" class="modal-btn">Settings</button>
+            <button id="pause-main-menu-btn" class="modal-btn">Main Menu</button>
+        </div>
+    </div>
+
     <!-- Game over modal -->
     <div id="game-over-modal" class="modal">
         <div class="modal-content">
             <h2>Game Over</h2>
             <p id="final-score-text">Final Score: 0</p>
-            <button id="restart-btn" class="modal-btn">Restart Game</button>
+            <button id="restart-level-btn" class="modal-btn">Restart Level</button>
+            <button id="game-over-settings-btn" class="modal-btn">Settings</button>
+            <button id="game-over-main-menu-btn" class="modal-btn">Main Menu</button>
         </div>
     </div>
 
-    <script type="module" src="space-background.js"></script>
+    <!-- Player Name Input -->
+    <div id="name-input-modal" class="modal active">
+        <div class="modal-content">
+            <h2>Welcome to Brick Breaker!</h2>
+            <p>Enter your name to continue:</p>
+            <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20">
+            <button id="continue-btn" class="modal-btn">Continue</button>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="menu" style="display:none;">
+        <h1>Brick Breaker</h1>
+        <p id="welcome-text">Welcome, Player!</p>
+        <button id="startBtn" class="menu-btn">Start Game</button>
+        <button id="settingsBtn" class="menu-btn">Settings</button>
+        <button id="leaderboardBtn" class="menu-btn">Leaderboard</button>
+        <button id="soundBtn" class="menu-btn">🔈 Sound: ON</button>
+        <p id="infoText">Highest Score: 0</p>
+    </div>
+    
+    <!-- Difficulty Selection Menu -->
+    <div id="difficulty-menu" style="display:none;">
+        <h2>Choose Difficulty</h2>
+        <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+        <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+        <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        <button class="difficulty-btn" data-difficulty="infinity">Infinity</button>
+        <button id="back-to-menu-btn" class="menu-btn">Back to Menu</button>
+    </div>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu" style="display:none;">
+        <h2>Settings</h2>
+        <div class="setting-item">
+            <label>Sound:</label>
+            <button id="sound-toggle-btn" class="menu-btn">🔈 ON</button>
+        </div>
+        <div class="setting-item">
+            <label>Music Volume:</label>
+            <input type="range" id="music-volume" min="0" max="100" value="20">
+        </div>
+        <div class="setting-item">
+            <label>SFX Volume:</label>
+            <input type="range" id="sfx-volume" min="0" max="100" value="50">
+        </div>
+        <button id="resume-from-settings-btn" class="menu-btn" style="display:none;">Resume Game</button>
+        <button id="back-to-main-btn" class="menu-btn">Back to Menu</button>
+    </div>
+
+    <!-- Leaderboard Menu -->
+    <div id="leaderboard-menu" style="display:none;">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-content">
+            <p>Loading leaderboard...</p>
+        </div>
+        <button id="back-to-main-leaderboard-btn" class="menu-btn">Back to Menu</button>
+    </div>
+
+    <script type="module" src="background.js"></script>
     <script type="module" src="game.js"></script>
 </body>
 </html>
