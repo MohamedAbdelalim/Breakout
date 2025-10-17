@@ -196,9 +196,9 @@ function setupEventListeners() {
     // ESC key for pause/unpause
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (gameRunning && !gamePaused) {
+            if (gameRunning && !gamePaused && !pauseModal.classList.contains('active')) {
                 pauseGame();
-            } else if (gamePaused) {
+            } else if (gamePaused && pauseModal.classList.contains('active')) {
                 resumeGame();
             }
         }
@@ -302,29 +302,36 @@ function updateSoundButton() {
 
 // Pause game
 function pauseGame() {
+    if (!gameRunning || gamePaused) return;
+    
     gamePaused = true;
-    gameRunning = false;
     pauseModal.classList.add('active');
     
-    // Cancel any pending animation frame to stop the game loop
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-    }
+    // DON'T set gameRunning to false here - keep it true so we can resume
+    // The draw function will check gamePaused instead
 }
 
 // Resume game
 function resumeGame() {
+    if (!gamePaused) return;
+    
     gamePaused = false;
-    gameRunning = true;
     pauseModal.classList.remove('active');
     lastTime = performance.now(); // Reset time to prevent large delta time
-    draw(); // Resume game loop
+    
+    // Request new animation frame to continue
+    if (gameRunning) {
+        animationId = requestAnimationFrame(draw);
+    }
 }
 
 // Restart current level
 function restartCurrentLevel() {
     gameOverModal.classList.remove('active');
+    
+    // Reset score and level to starting values
+    gameState.score = 0;
+    gameState.level = 1;
     
     // Reset ball and paddle positions
     ball.x = canvas.width / 2;
@@ -336,20 +343,23 @@ function restartCurrentLevel() {
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty (preserve lives in infinity mode)
-    if (gameState.difficulty !== 'infinity') {
-        gameState.lives = settings.lives;
-    }
+    // Reset lives based on difficulty
+    gameState.lives = settings.lives;
     
-    // Generate new bricks for current level
-    generateBricks(canvas);
+    // Generate new bricks with correct difficulty settings
+    generateBricks(canvas, settings.brickRows, settings.brickCols);
     
     updateUIBar();
+    
+    // Start background music
+    playBackgroundSound();
     
     // Resume game
     gameRunning = true;
     levelCompleted = false;
-    draw();
+    gamePaused = false;
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(draw);
 }
 
 // Start game with selected difficulty
@@ -357,8 +367,12 @@ function startGame(difficulty) {
     gameState.difficulty = difficulty;
     const settings = difficultySettings[difficulty];
     
-    // Apply difficulty settings
+    // Reset game state completely
+    gameState.score = 0;
+    gameState.level = 1;
     gameState.lives = settings.lives;
+    
+    // Apply difficulty settings
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
@@ -371,21 +385,25 @@ function startGame(difficulty) {
     ball.y = canvas.height - 50;
     paddle.x = (canvas.width - paddle.width) / 2;
     
-    // Generate bricks based on difficulty
-    generateBricks(canvas);
+    // Generate bricks with correct difficulty settings
+    generateBricks(canvas, settings.brickRows, settings.brickCols);
     
     // Update UI
     updateUIBar();
     
-    // Start game loop
+    // Reset game flags
     gameRunning = true;
     levelCompleted = false;
+    gamePaused = false;
     
     // Start background music
     playBackgroundSound();
     
+    // Reset time tracker
+    lastTime = performance.now();
+    
     // Start drawing
-    draw();
+    animationId = requestAnimationFrame(draw);
 }
 
 // Update UI bar
@@ -412,6 +430,11 @@ function updateUIBar() {
 
 // Main game loop
 function draw(currentTime = 0) {
+    // Stop immediately if paused
+    if (gamePaused) {
+        return; // Don't request next frame
+    }
+    
     if (!gameRunning) return;
     
     // Calculate delta time for frame-rate independent movement
@@ -452,7 +475,7 @@ function draw(currentTime = 0) {
         playSound(hitSound);
         
         // Update UI immediately when score changes
-        updateUIBar();
+        updateScoreDisplay(gameState.score);
         
         // Spawn power-ups for newly broken bricks (only check when needed)
         for (const brick of bricks) {
@@ -477,15 +500,20 @@ function draw(currentTime = 0) {
             });
         } else {
             // For other difficulties, just restart the same level
+            const settings = difficultySettings[gameState.difficulty];
             setTimeout(() => {
-                generateBricks(canvas);
+                generateBricks(canvas, settings.brickRows, settings.brickCols);
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height - 50;
                 paddle.x = (canvas.width - paddle.width) / 2;
                 levelCompleted = false;
                 gameRunning = true;
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(draw);
             }, 1000);
+            return; // Exit early so we don't request another frame
         }
+        return; // Exit early
     }
 
     // Move paddle based on input (frame-rate independent)
@@ -537,6 +565,8 @@ function draw(currentTime = 0) {
         } else {
             // Lose a life
             gameState.lives--;
+            updateLivesDisplay(gameState.lives);
+            
             if (gameState.lives <= 0) {
                 gameRunning = false;
                 stopBackgroundSound();
@@ -547,7 +577,8 @@ function draw(currentTime = 0) {
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height - 50;
                 paddle.x = (canvas.width - paddle.width) / 2;
-                ball.dy = Math.abs(ball.dy);
+                ball.dy = -Math.abs(ball.dy);
+                ball.dx = Math.abs(ball.dx) * (Math.random() > 0.5 ? 1 : -1);
             }
         }
     }
@@ -561,27 +592,29 @@ function draw(currentTime = 0) {
 function startNextLevel() {
     levelCompleted = false;
     
+    const settings = difficultySettings[gameState.difficulty];
+    
     // Increase difficulty slightly for infinity mode
     if (gameState.difficulty === 'infinity') {
-        ball.dx = Math.abs(ball.dx) + 0.2;
-        ball.dy = Math.abs(ball.dy) + 0.2;
+        ball.dx = (Math.abs(ball.dx) + 0.2) * (ball.dx > 0 ? 1 : -1);
+        ball.dy = -(Math.abs(ball.dy) + 0.2);
     }
     
-    // Generate new bricks
-    generateBricks(canvas);
+    // Generate new bricks with correct settings
+    generateBricks(canvas, settings.brickRows, settings.brickCols);
     
     // Reset ball and paddle positions
     ball.x = canvas.width / 2;
     ball.y = canvas.height - 50;
     paddle.x = (canvas.width - paddle.width) / 2;
-    ball.dx = Math.abs(ball.dx);
-    ball.dy = -Math.abs(ball.dy);
     
     updateUIBar();
     
     // Restart the game loop
     gameRunning = true;
-    draw();
+    gamePaused = false;
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(draw);
 }
 
 // Reset game to initial state
@@ -590,6 +623,13 @@ function resetGame() {
     gameState.level = 1;
     gameRunning = false;
     levelCompleted = false;
+    gamePaused = false;
+    
+    // Cancel animation frame if exists
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
     
     // Reset ball and paddle positions
     ball.x = canvas.width / 2;
@@ -601,13 +641,11 @@ function resetGame() {
     ball.dx = settings.ballSpeed;
     ball.dy = -settings.ballSpeed;
     
-    // Reset lives based on difficulty (preserve lives in infinity mode)
-    if (gameState.difficulty !== 'infinity') {
-        gameState.lives = settings.lives;
-    }
+    // Reset lives based on difficulty
+    gameState.lives = settings.lives;
     
-    // Generate new bricks
-    generateBricks(canvas);
+    // Generate new bricks with correct settings
+    generateBricks(canvas, settings.brickRows, settings.brickCols);
     
     updateUIBar();
 }
@@ -619,6 +657,7 @@ function showMenu() {
     // Stop drawing
     if (animationId) {
         cancelAnimationFrame(animationId);
+        animationId = null;
     }
     
     // Hide game and show menu

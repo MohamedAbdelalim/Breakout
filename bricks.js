@@ -366,7 +366,6 @@ export function handleLevelCompletion(ball, paddle, canvas) {
     }
 }
 
-
 // NEW: Reset progression back to level 1 and base difficulty
 export function resetToLevelOne(canvas) {
     level = 1;

@@ -22,7 +22,20 @@ export function brickCollisionDetection(ball, bricks) {
                     ball.y + ball.radius > brick.y &&
                     ball.y - ball.radius < brick.y + brick.height) {
                     
-                    ball.dy = -ball.dy; // change ball direction
+                    // Determine the side of collision by calculating overlaps
+                    const overlapLeft = ballRight - brick.x;
+                    const overlapRight = (brick.x + brick.width) - ballLeft;
+                    const overlapTop = ballBottom - brick.y;
+                    const overlapBottom = (brick.y + brick.height) - ballTop;
+                    
+                    const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                    
+                    // Reverse direction based on the side with smallest overlap
+                    if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                        ball.dx = -ball.dx; // Side hit: reverse horizontal direction
+                    } else {
+                        ball.dy = -ball.dy; // Top/bottom hit: reverse vertical direction
+                    }
                     
                     // Check if brick was frozen before hit
                     const wasFrozen = brick.frozen;
@@ -46,4 +59,3 @@ export function brickCollisionDetection(ball, bricks) {
     }
     return scoreGained;  // return the updated score
 }
-
