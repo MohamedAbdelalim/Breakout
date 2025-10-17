@@ -49,10 +49,6 @@ export function drawParticles(ctx) {
 }
 //Creates explosion particles when a brick is destroyed.
 
-const PARTICLE_COUNT = 8;
-const PARTICLE_LIFETIME = 60;
-let particles = [];
-
 
 export function createParticles(brickX, brickY, brickWidth, brickHeight, brickColor) {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
